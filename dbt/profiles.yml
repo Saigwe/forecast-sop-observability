@@ -1,0 +1,8 @@
+# Kept in-repo so CI and reviewers can run it. No secrets: DuckDB is a local file.
+forecast_sop:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '../warehouse/planning.duckdb') }}"
+      threads: 4

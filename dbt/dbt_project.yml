@@ -1,0 +1,35 @@
+name: forecast_sop
+version: 1.0.0
+config-version: 2
+profile: forecast_sop
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Demo assumptions. Change one and rerun `make dbt` to see its consequence.
+  as_of: "2026-11-23 09:00:00"   # the planning meeting: nothing created after this exists
+  accuracy_from: "2025-03-03"    # first target week scored (every horizon 1 to 8 has a snapshot by then)
+  decision_horizon: 4            # weeks: replenishment and staffing are committed four weeks out
+  max_scored_horizon: 8
+  cover_shortage_weeks: 1.5      # weeks of cover below this, or a projected stock-out within the projection window: shortage
+  projection_weeks: 6            # four weeks of lead time plus a two-week review cycle
+  cover_overage_weeks: 12        # weeks of cover above this: overage
+  capacity_alert: 0.95           # planned load above 95% of available hours needs a decision
+  actuals_due_hours: 204         # actuals for a week are due 8.5 days after it starts (Tuesday 12:00)
+  feed_grace_hours: 24           # a feed is late if it lands more than a day after it was due
+
+models:
+  forecast_sop:
+    staging:
+      +schema: silver
+      +materialized: table
+    intermediate:
+      +schema: silver
+      +materialized: table
+    marts:
+      +schema: gold
+      +materialized: table

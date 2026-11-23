@@ -1,0 +1,95 @@
+# Source contracts: what each feed must deliver. tests/test_contracts.py checks every raw file against this on each build.
+# Types: string, date, timestamp, int, float. Grain: the columns that must be unique together.
+forecast_snapshots:
+  owner: Demand planning (both forecast sources deliver to this contract)
+  cadence: weekly; sensing by Monday 12:00 UTC, consensus by Wednesday 00:00 UTC
+  grain: [source, snapshot_week, version, sku, market, target_week, scenario]
+  columns:
+    snapshot_id: string
+    source: string
+    snapshot_week: date
+    version: int
+    created_at: timestamp
+    sku: string
+    market: string
+    target_week: date
+    horizon_weeks: int
+    scenario: string
+    units: float
+feed_manifest:
+  owner: Data platform
+  cadence: one row per expected delivery
+  grain: [source, market, snapshot_week]
+  columns:
+    source: string
+    market: string
+    snapshot_week: date
+    received_at: timestamp
+    rows_received: int
+    rows_expected: int
+    expected_by: timestamp
+actuals_weekly:
+  owner: Order management
+  cadence: weekly, due Tuesday 12:00 UTC after the week ends; re-deliveries repeat the key
+  grain: [week_start, sku, market, delivered_at]
+  columns:
+    week_start: date
+    sku: string
+    market: string
+    units: int
+    delivered_at: timestamp
+    delivery_id: string
+labour_capacity:
+  owner: Site operations
+  grain: [site_id, week_start]
+  columns:
+    site_id: string
+    week_start: date
+    headcount: int
+    temporary_headcount: int
+    contracted_hours_per_head: float
+    planned_absence_rate: float
+routings:
+  owner: Site engineering (unit of measure differs by site; see uom)
+  grain: [site_id, family]
+  columns:
+    site_id: string
+    family: string
+    std_time_per_unit: float
+    uom: string
+inventory_snapshots:
+  owner: Warehouse management
+  grain: [week_start, sku, site_id]
+  columns:
+    week_start: date
+    sku: string
+    site_id: string
+    on_hand_units: int
+    backorder_units: int
+planned_receipts:
+  owner: Supply planning
+  grain: [sku, site_id, receipt_week]
+  columns:
+    sku: string
+    site_id: string
+    receipt_week: date
+    units: int
+skus:
+  grain: [sku]
+  columns:
+    sku: string
+    sku_name: string
+    family: string
+    discontinued_from: date
+markets:
+  grain: [market]
+  columns:
+    market: string
+    market_name: string
+    site_id: string
+sites:
+  grain: [site_id]
+  columns:
+    site_id: string
+    site_name: string
+    region: string

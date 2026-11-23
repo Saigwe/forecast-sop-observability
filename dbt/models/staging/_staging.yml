@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_forecast_snapshots
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [source, snapshot_week, version, sku, market, target_week, scenario]
+    columns:
+      - name: source
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [sensing, consensus]
+      - name: scenario
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [base, upside]
+      - name: units
+        data_tests: [not_null]
+  - name: stg_actuals
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [week_start, sku, market]
+  - name: stg_routings
+    columns:
+      - name: std_hours_per_unit
+        description: Null if the source reports a unit this model does not know, which fails the test.
+        data_tests: [not_null]
+      - name: source_uom
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [hours, minutes]
+  - name: stg_labour_capacity
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [site_id, week_start]

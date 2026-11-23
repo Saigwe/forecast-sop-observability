@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: fct_forecast_accuracy
+    description: Forecast-actual pairs, SKU x market x target week x horizon x source.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [source, horizon_weeks, sku, market, target_week]
+    columns:
+      - name: actual_units
+        data_tests: [not_null]
+  - name: fct_forecast_snapshot
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [source, snapshot_week, sku, market, target_week]
+  - name: rpt_accuracy
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [window_name, level, member, source, horizon_weeks]
+  - name: fct_capacity_weekly
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [scenario, site_id, week_start]
+    columns:
+      - name: scenario
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [actual, base, upside, constrained]
+  - name: rpt_inventory_exceptions
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [source, sku, site_id]
+    columns:
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [ok, shortage, overage]
+  - name: rpt_feed_completeness
+    columns:
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [ok, late, partial, missing]
+  - name: rpt_sop_scorecard
+    columns:
+      - name: status
+        data_tests: [not_null]

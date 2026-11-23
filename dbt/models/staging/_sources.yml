@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Parquet files written by generator/simulate.py, as each source system delivers them. Every number is synthetic.
+    meta:
+      external_location: "{{ env_var('RAW_DIR', '../data/raw') }}/{name}.parquet"
+    tables:
+      - name: skus
+      - name: markets
+      - name: sites
+      - name: forecast_snapshots
+        description: Every forecast snapshot from both sources, every version, with the time it was created.
+      - name: feed_manifest
+        description: What each forecast feed was expected to deliver, and what arrived.
+      - name: actuals_weekly
+        description: Shipped units as delivered. A re-delivery repeats the key with a later delivered_at.
+      - name: labour_capacity
+      - name: routings
+        description: Standard handling time per unit. The unit of measure is in the uom column and differs by site.
+      - name: inventory_snapshots
+      - name: planned_receipts

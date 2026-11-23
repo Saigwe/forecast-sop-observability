@@ -1,0 +1,54 @@
+// DAX equivalents of the gold-mart definitions, for a Power BI model over the same tables.
+// Tables: FcAccuracy (fct_forecast_accuracy), Capacity (fct_capacity_weekly), Inventory (rpt_inventory_exceptions),
+// Sku, Market, Site, Week. Matched pairs only, as in the marts.
+
+Actual Units = CALCULATE ( SUM ( FcAccuracy[actual_units] ), FcAccuracy[is_matched] = TRUE () )
+Forecast Units = CALCULATE ( SUM ( FcAccuracy[forecast_units] ), FcAccuracy[is_matched] = TRUE () )
+
+// SKU x market WAPE: row-level absolute error, summed, over summed actuals. Correct under any filter.
+WAPE SKU =
+DIVIDE (
+    CALCULATE ( SUM ( FcAccuracy[abs_error_units] ), FcAccuracy[is_matched] = TRUE () ),
+    [Actual Units]
+)
+
+// Total-level WAPE: sum forecast and actual per target week first, then compare. Errors cancel across SKUs.
+WAPE Summed =
+VAR Weeks =
+    ADDCOLUMNS (
+        VALUES ( FcAccuracy[target_week] ),
+        "@f", [Forecast Units],
+        "@a", [Actual Units]
+    )
+RETURN
+    DIVIDE ( SUMX ( Weeks, ABS ( [@f] - [@a] ) ), SUMX ( Weeks, [@a] ) )
+
+// Positive = over-forecast.
+Bias = DIVIDE ( [Forecast Units] - [Actual Units], [Actual Units] )
+
+Fill If Stocked To Forecast =
+1 - DIVIDE (
+    CALCULATE ( SUM ( FcAccuracy[shortfall_units] ), FcAccuracy[is_matched] = TRUE () ),
+    [Actual Units]
+)
+
+Excess Share =
+DIVIDE ( CALCULATE ( SUM ( FcAccuracy[excess_units] ), FcAccuracy[is_matched] = TRUE () ), [Actual Units] )
+
+// Decision horizon slice; use with a Horizon slicer or as a fixed filter on the scorecard.
+WAPE SKU 4 Weeks = CALCULATE ( [WAPE SKU], FcAccuracy[horizon_weeks] = 4 )
+
+// Capacity: always a ratio of sums, never an average of weekly utilisation.
+Load Hours = SUM ( Capacity[load_hours] )
+Available Hours = SUM ( Capacity[available_hours] )
+Utilisation = DIVIDE ( [Load Hours], [Available Hours] )
+Peak Utilisation =
+MAXX ( VALUES ( Capacity[week_start] ), [Utilisation] )
+Hours Over Capacity =
+SUMX ( VALUES ( Capacity[week_start] ), MAX ( 0, [Load Hours] - [Available Hours] ) )
+
+// Inventory: positions where the two sources disagree.
+Positions In Dispute =
+COUNTROWS (
+    SUMMARIZE ( FILTER ( Inventory, Inventory[sources_disagree] = TRUE () ), Inventory[sku], Inventory[site_id] )
+)
